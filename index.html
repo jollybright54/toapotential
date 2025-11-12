@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="title" content="쿠키런: 모험의 탑 최적 잠재 계산기">
+        <meta name="description" content="쿠키런: 모험의 탑 쿠키들의 다양한 조합의 최적 잠재를 확인해보세요.">
+        <meta name="keywords" content="쿠키런, 모험의 탑, 최적 잠재, 계산기, 게임 도구">
+        
+        <!-- Open Graph Meta Tags -->
+        <meta property="og:title" content="쿠키런: 모험의 탑 최적 잠재 계산기">
+        <meta property="og:description" content="쿠키런: 모험의 탑 쿠키들의 다양한 조합의 최적 잠재를 확인해보세요.">
+        <meta property="og:image" content="./image/Stamp.png">
+        <meta property="og:url" content="https://toapotential.com">
+        <meta property="og:type" content="website">
+        
+        <link rel="icon" href="./image/Stamp.png">
+        <title>쿠키런: 모험의 탑 최적 잠재 계산기</title>
+        
+        <!-- External Libraries -->
+        <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+        <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+        
+        <!-- Stylesheets -->
+        <link rel="stylesheet" href="index_style5.css">
+        <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css">
+
+    
+    <style>
+    /* Injected loading overlay styles */
+    #loading-overlay { background: #fff; border-radius:6px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding:20px; display:inline-block; }
+    </style>
+    
+</head>
+    <body>
+        <div id="root"></div>
+        <script type="text/babel">
+            const { useState, useEffect, useMemo, useRef, useCallback, memo } = React;
+            // ==================== 번역 데이터 ====================
+            const translations = {
+                ko: {
+                    // 메타 정보
+                    title: "최적 잠재 계산기",
+                    description: "최적 잠재를 찾고자 하는 쿠키의 속성을 선택하면 다양한 쿠키의 조합을 확인할 수 있습니다. 설정을 다 끝낸 후 결과를 확인하세요.",
+                    titleImage: "./image/Title.png",
+                    titleImageAlt: "쿠키런: 모험의 탑",
+                    
+                    // UI 텍스트
+                    settings: "설정",
+                    results: "최적 잠재 계산 결과",
+                    tips: "팁",
+                    updateHistory: "업데이트 내역",
+                    
+                    // 콘텐츠 타입
+                    championsRaid: "챔피언스 레이드",
+                    infiniteLabyrinth: "무한의 미궁",
+                    
+                    // 라벨
+                    element: "속성",
+                    cookie: "쿠키",
+                    artifact: "아티팩트",
+                    set: "착용 세트",
+                    minCritRate: "최소 치명타 확률",
+                    additionalCritDmg: "추가 치명타 피해",
+                    additionalElementDmg: "추가 속성 피해",
+                    
+                    // 결과 헤더
+                    rank: "순위",
+                    elementAtk: "속공",
+                    atkPer: "공%",
+                    elementDmg: "속피%",
+                    critRate: "치확%",
+                    critDmg: "치피%",
+                    buffAmp: "벞증%",
+                    debuffAmp: "디벞증%",
+                    efficiency: "효율",
+                    
+                    // 기타
+                    calculating: "계산 중...",
+                    place: "위",
+                    
+                    // 팁
+                    tipText: [
+                        "• 통상적으로 최적잠재를 말할 때 사용하는 네 숫자는 각각 속성 공격력, 공격력%, 치명타 확률%, 치명타 피해% 순서입니다.",
+                        "• 시간관리국의 제복 세트는 1주년 (달콤한 슈가랜드) 세트와 성능이 동일합니다."
+                    ],
+                    
+                    // 업데이트 내역
+                    updates: [
+                        "• 10.22 - 로스베이컨맛 쿠키 추가",
+                        "• 10.01 - 윈드파라거스 쿠키 추가",
+                        "• 10.01 - 이슬맛 쿠키 상향 반영",
+                        "• 09.17 - 이슬맛 쿠키 추가",
+                        "• 09.03 - 아이리스맛 쿠키 추가",
+                        "• 07.01 - 속성 별 정렬 활성화",
+                        "• 06.26 - 최적 잠재 계산기 웹 서비스 시작!"
+                    ],
+                    
+                    // 저작권
+                    copyright: [
+                        "최적 잠재 계산기에서 사용된 모든 쿠키런: 모험의 탑 리소스의 저작권은 데브시스터즈에 있습니다.",
+                        "이 페이지에는 데브시스터즈에서 제작한 '쿠키런 글꼴'이 적용되어 있습니다.",
+                        "toapotential.com은 데브시스터즈의 제휴, 후원 또는 승인을 받지 않은 콘텐츠입니다.",
+                        "기타 문의는 jollybright54@gmail.com으로 보내주시길 바랍니다."
+                    ],
+                    
+                    // 속성
+                    elements: {
+                        '불': '불',
+                        '물': '물',
+                        '바람': '바람',
+                        '대지': '대지',
+                        '빛': '빛',
+                        '어둠': '어둠'
+                    },
+                    
+                    // 쿠키 이름
+                    cookies: {
+                        '선데맛 쿠키': '선데맛 쿠키',
+                        '크림소다맛 쿠키': '크림소다맛 쿠키',
+                        '칠리맛 쿠키': '칠리맛 쿠키',
+                        '다크초코 쿠키': '다크초코 쿠키',
+                        '호밀맛 쿠키': '호밀맛 쿠키',
+                        '레몬제스트맛 쿠키': '레몬제스트맛 쿠키',
+                        '콜라비맛 쿠키': '콜라비맛 쿠키',
+                        '할라피뇨맛 쿠키': '할라피뇨맛 쿠키',
+                        '바질페스토맛 쿠키': '바질페스토맛 쿠키',
+                        '슈가글로브맛 쿠키': '슈가글로브맛 쿠키',
+                        '아이스민트맛 쿠키': '아이스민트맛 쿠키',
+                        '드라이스톤맛 쿠키': '드라이스톤맛 쿠키',
+                        '딸기찹쌀떡맛 쿠키': '딸기찹쌀떡맛 쿠키',
+                        '소닉워터맛 쿠키': '소닉워터맛 쿠키',
+                        '스팅두리안맛 쿠키': '스팅두리안맛 쿠키',
+                        '알사탕맛 쿠키': '알사탕맛 쿠키',
+                        '플랜틴맛 쿠키': '플랜틴맛 쿠키',
+                        '마법사맛 쿠키': '마법사맛 쿠키',
+                        '레몬맛 쿠키': '레몬맛 쿠키',
+                        '마블베리맛 쿠키': '마블베리맛 쿠키',
+                        '연금술사맛 쿠키': '연금술사맛 쿠키',
+                        '마라맛 쿠키': '마라맛 쿠키',
+                        '체리맛 쿠키': '체리맛 쿠키',
+                        '용감한 쿠키': '용감한 쿠키',
+                        '복숭아맛 쿠키': '복숭아맛 쿠키',
+                        '그린벨맛 쿠키': '그린벨맛 쿠키',
+                        '허니베어맛 쿠키': '허니베어맛 쿠키',
+                        '블랙베리맛 쿠키': '블랙베리맛 쿠키',
+                        '닌자맛 쿠키': '닌자맛 쿠키',
+                        '웨어울프맛 쿠키': '웨어울프맛 쿠키',
+                        '꽈배기맛 쿠키': '꽈배기맛 쿠키',
+                        '록스타맛 쿠키': '록스타맛 쿠키',
+                        '바나나로티맛 쿠키': '바나나로티맛 쿠키',
+                        '버블껌맛 쿠키': '버블껌맛 쿠키',
+                        '버터밀크맛 쿠키': '버터밀크맛 쿠키',
+                        '아이리스맛 쿠키': '아이리스맛 쿠키',
+                        '이슬맛 쿠키': '이슬맛 쿠키',
+                        '윈드파라거스 쿠키': '윈드파라거스 쿠키',
+                        '로스베이컨맛 쿠키': '로스베이컨맛 쿠키'
+                    },
+                    
+                    // 아티팩트 이름
+                    artifacts: {
+                        '노력의 결실': '노력의 결실',
+                        '보석 같은 기억': '보석 같은 기억',
+                        '작전 개시': '작전 개시',
+                        '돌이킬 수 없는 선택': '돌이킬 수 없는 선택',
+                        '석양 아래 추격전': '석양 아래 추격전',
+                        '열기 속 정조준': '열기 속 정조준',
+                        '꿰뚫는 빛': '꿰뚫는 빛',
+                        '되새기는 기억': '되새기는 기억',
+                        '특제 요리': '특제 요리',
+                        '행복의 기억': '행복의 기억',
+                        '눈밭 위의 질주': '눈밭 위의 질주',
+                        '각성의 순간': '각성의 순간',
+                        '충전은 타이밍': '충전은 타이밍',
+                        '다정한 소원': '다정한 소원',
+                        '저 너머로!': '저 너머로!',
+                        '포크레인': '포크레인',
+                        '실수투성이인 하루': '실수투성이인 하루',
+                        '화려한 등장': '화려한 등장',
+                        '잊혀진 마법서의 비밀': '잊혀진 마법서의 비밀',
+                        '앵콜 스테이지': '앵콜 스테이지',
+                        '새로운 조합식': '새로운 조합식',
+                        '한 입의 여유': '한 입의 여유',
+                        '자정의 왈츠': '자정의 왈츠',
+                        '꿀잠의 비결': '꿀잠의 비결',
+                        '한가로운 오후': '한가로운 오후',
+                        '환상의 짝꿍': '환상의 짝꿍',
+                        '배반의 기도': '배반의 기도',
+                        '비가 전해 줄 소식': '비가 전해 줄 소식',
+                        '비에 젖은 과거': '비에 젖은 과거',
+                        '이어지는 마음': '이어지는 마음',
+                        '든든한 응원': '든든한 응원'
+                    },
+                    
+                    // 세트 이름
+                    sets: {
+                        '속성 세트': '속성 세트',
+                        '설탕 세트': '설탕 세트',
+                        '시간관리국의 제복 세트': '시간관리국의 제복 세트',
+                        '미지의 방랑자 세트': '미지의 방랑자 세트',
+                        '수상한 사냥꾼 세트': '수상한 사냥꾼 세트',
+                        '오묘한 기억 세트': '오묘한 기억 세트',
+                        '잊혀진 영웅 세트': '잊혀진 영웅 세트',
+                        '황금 예복 세트': '황금 예복 세트',
+                        '유성우의 향연 세트': '유성우의 향연 세트',
+                        '영원의 대마술사 세트': '영원의 대마술사 세트',
+                        '전설의 유령해적 세트': '전설의 유령해적 세트'
+                    }
+                },
+                en: {
+                    // Meta info
+                    title: "Optimal Potential Calculator",
+                    description: "Select the element of the cookie you want to find the optimal potential for and check various cookie combinations.",
+                    titleImage: "./image/Title_EN.png",
+                    titleImageAlt: "CookieRun: Tower of Adventures",
+                    
+                    // UI text
+                    settings: "Settings",
+                    results: "Optimal Potential Calculation Results",
+                    tips: "Tips",
+                    updateHistory: "Update History",
+                    
+                    // Content types
+                    championsRaid: "Champions Raid",
+                    infiniteLabyrinth: "Infinite Labyrinth",
+                    
+                    // Labels
+                    element: "Element",
+                    cookie: "Cookie",
+                    artifact: "Artifact",
+                    set: "Equipment Set",
+                    minCritRate: "Min Crit Rate",
+                    additionalCritDmg: "Additional Crit DMG",
+                    additionalElementDmg: "Additional Element Dmg",
+                    
+                    // Result headers
+                    rank: "Rank",
+                    elementAtk: "Elemental Atk",
+                    atkPer: "ATK%",
+                    elementDmg: "Elem Dmg%",
+                    critRate: "Crit Rate%",
+                    critDmg: "Crit DMG%",
+                    buffAmp: "Buff Amp%",
+                    debuffAmp: "Debuff Amp%",
+                    efficiency: "Efficiency",
+                    
+                    // Others
+                    calculating: "Calculating...",
+                    place: "",
+                    
+                    // Tips
+                    tipText: [
+                        "• For example, 2/2/4/0 means 2 element atk, 2 ATK%, 4 Crit Rate%, 0 Crit DMG%.",
+                        "• TBD has the same performance as the 1st Anniversary (Sweet Sugarland) Set."
+                    ],
+                    
+                    // Update history
+                    updates: [
+                        "• 10.22 - Added Roasted Bacon Cookie",
+                        "• 10.01 - Added Wind Asparagus Cookie",
+                        "• 10.01 - Updated Dew Cookie's buff",
+                        "• 09.17 - Added Dew Cookie",
+                        "• 09.03 - Added Iris Cookie",
+                        "• 07.01 - Enabled sorting by element",
+                        "• 06.26 - Optimal Potential Calculator web service launched!"
+                    ],
+                    
+                    // Copyright
+                    copyright: [
+                        "All CookieRun: Tower of Adventure resources used in the Optimal Potential Calculator are copyrighted by Devsisters.",
+                        "This page uses the 'CookieRun Font' created by Devsisters.",
+                        "toapotential.com is not affiliated, sponsored or approved by Devsisters.",
+                        "For other inquiries, please contact jollybright54@gmail.com."
+                    ],
+                    
+                    // Elements
+                    elements: {
+                        '불': 'Fire',
+                        '물': 'Water',
+                        '바람': 'Wind',
+                        '대지': 'Earth',
+                        '빛': 'Light',
+                        '어둠': 'Dark'
+                    },
+                    
+                    // Cookie names (English)
+                    cookies: {
+                        '선데맛 쿠키': 'Sundae Cookie',
+                        '크림소다맛 쿠키': 'Cream Soda Cookie',
+                        '칠리맛 쿠키': 'Chili Pepper Cookie',
+                        '다크초코 쿠키': 'Dark Choco Cookie',
+                        '호밀맛 쿠키': 'Rye Cookie',
+                        '레몬제스트맛 쿠키': 'Lemon Zest Cookie',
+                        '콜라비맛 쿠키': 'Kohlrabi Cookie',
+                        '할라피뇨맛 쿠키': 'Jalapeno Cookie',
+                        '바질페스토맛 쿠키': 'Basil Pesto Cookie',
+                        '슈가글로브맛 쿠키': 'Sugar Globe Cookie',
+                        '아이스민트맛 쿠키': 'Ice Mint Cookie',
+                        '드라이스톤맛 쿠키': 'Frostrock Cookie',
+                        '딸기찹쌀떡맛 쿠키': 'Strawberry Mochi Cookie',
+                        '소닉워터맛 쿠키': 'Sonic Water Cookie',
+                        '스팅두리안맛 쿠키': 'Sting Durian Cookie',
+                        '알사탕맛 쿠키': 'Candy Drop Cookie',
+                        '플랜틴맛 쿠키': 'Plantain Cookie',
+                        '마법사맛 쿠키': 'Wizard Cookie',
+                        '레몬맛 쿠키': 'Lemon Cookie',
+                        '마블베리맛 쿠키': 'Marbleberry Cookie',
+                        '연금술사맛 쿠키': 'Alchemist Cookie',
+                        '마라맛 쿠키': 'Mala Sauce Cookie',
+                        '체리맛 쿠키': 'Cherry Cookie',
+                        '용감한 쿠키': 'GingerBrave',
+                        '복숭아맛 쿠키': 'Peach Cookie',
+                        '그린벨맛 쿠키': 'Greenbell Cookie',
+                        '허니베어맛 쿠키': 'Honeybear Cookie',
+                        '블랙베리맛 쿠키': 'Blackberry Cookie',
+                        '닌자맛 쿠키': 'Ninja Cookie',
+                        '웨어울프맛 쿠키': 'Werewolf Cookie',
+                        '꽈배기맛 쿠키': 'Twisted Donut Cookie',
+                        '록스타맛 쿠키': 'Rockstar Cookie',
+                        '바나나로티맛 쿠키': 'Banana Roti Cookie',
+                        '버블껌맛 쿠키': 'Gumball Cookie',
+                        '버터밀크맛 쿠키': 'Butter Milk Cookie',
+                        '아이리스맛 쿠키': 'Iris Cookie',
+                        '이슬맛 쿠키': 'Dew Cookie',
+                        '윈드파라거스 쿠키': 'Wind Asparagus Cookie',
+                        '로스베이컨맛 쿠키': 'Roasted Bacon Cookie'
+                    },
+                    
+                    // Artifact names (English)
+                    artifacts: {
+                        '노력의 결실': 'Fruit of Labor',
+                        '보석 같은 기억': 'Bejeweled Memories',
+                        '작전 개시': 'Opportunity Strikes',
+                        '돌이킬 수 없는 선택': 'No Turning Back',
+                        '석양 아래 추격전': 'Sunset Pursuit',
+                        '열기 속 정조준': 'Aim Spice Down',
+                        '꿰뚫는 빛': 'Piercing Light',
+                        '되새기는 기억': 'Ruminated Memories',
+                        '특제 요리': 'A Warming Meal',
+                        '행복의 기억': 'Happy Memory',
+                        '눈밭 위의 질주': 'Snowy Slope Speeding',
+                        '각성의 순간': 'Moment of Awakening',
+                        '충전은 타이밍': 'Well-timed Recharge',
+                        '다정한 소원': 'Lovely Wish',
+                        '저 너머로!': 'Going Beyond!',
+                        '포크레인': 'Rain of Forks',
+                        '실수투성이인 하루': 'Clumsy Day',
+                        '화려한 등장': 'Flashy Entrance',
+                        '잊혀진 마법서의 비밀': 'Forgotten Grimoire',
+                        '앵콜 스테이지': 'Encore Performance',
+                        '새로운 조합식': 'Newest Formula',
+                        '한 입의 여유': 'Breaktime Snack',
+                        '자정의 왈츠': 'Midnight Waltz',
+                        '꿀잠의 비결': 'The Secret of Sweet Sleep',
+                        '한가로운 오후': 'Leisurely Afternoon',
+                        '환상의 짝꿍': 'Fantastical Friend',
+                        '배반의 기도': 'Treacherous Prayer',
+                        '비가 전해 줄 소식': 'Tales From the Rain',
+                        '비에 젖은 과거': 'Rain-soaked Past',
+                        '이어지는 마음': 'Linked Hearts',
+                        '든든한 응원': 'Reliable Encouragement'
+                    },
+                    
+                    // Set names (English)
+                    sets: {
+                        '속성 세트': 'Elemental Set',
+                        '설탕 세트': 'Sugar Feather',
+                        '시간관리국의 제복 세트': 'TBD',
+                        '미지의 방랑자 세트': 'Mysterious Wanderer',
+                        '수상한 사냥꾼 세트': 'Suspicious Hunter',
+                        '오묘한 기억 세트': 'Memory Shard',
+                        '잊혀진 영웅 세트': 'Forgotten Hero',
+                        '황금 예복 세트': 'Golden Finery',
+                        '유성우의 향연 세트': 'Falling Stars',
+                        '영원의 대마술사 세트': 'Eternal Magician',
+                        '전설의 유령해적 세트': 'Ghost Captain'
+                    }
+                }
+            };
+            
+            // ==================== 게임 데이터 ====================
+            const gameData = {
+                // 쿠키 데이터
+                cookies: {
+                    '선데맛 쿠키': { baseAtk: 655.38, atkPercent: 30, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 0},
+                    '크림소다맛 쿠키': { baseAtk: 705.38, atkPercent: 30, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 0},
+                    '칠리맛 쿠키': { baseAtk: 699, atkPercent: 0, elemDmg: 0, critRate: 37.5, critDmg: 284, buffAmp: 0, debuffAmp: 0},
+                    '다크초코 쿠키': { baseAtk: 735, atkPercent: 0, elemDmg: 0, critRate: 15, critDmg: 187.5, buffAmp: 0, debuffAmp: 0},
+                    '호밀맛 쿠키': { baseAtk: 716.92, atkPercent: 30, elemDmg: 0, critRate: 15, critDmg: 230, buffAmp: 0, debuffAmp: 0},
+                    '레몬제스트맛 쿠키': { baseAtk: 692, atkPercent: 0, elemDmg: 24, critRate: 37.5, critDmg: 150, buffAmp: 0, debuffAmp: 0},
+                    '콜라비맛 쿠키': { baseAtk: 723.85, atkPercent: 30, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 0 },
+                    '할라피뇨맛 쿠키': { baseAtk: 702.31, atkPercent: 30, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 0 },
+                    '바질페스토맛 쿠키': { baseAtk: 652, atkPercent: 0, elemDmg: 0, critRate: 37.5, critDmg: 150, buffAmp: 0, debuffAmp: 0 },
+                    '슈가글로브맛 쿠키': { baseAtk: 663, atkPercent: 0, elemDmg: 0, critRate: 37.5, critDmg: 150, buffAmp: 0, debuffAmp: 0 },
+                    '아이스민트맛 쿠키': { baseAtk: 658.46, atkPercent: 30, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 0 },
+                    '드라이스톤맛 쿠키': { baseAtk: 713, atkPercent: 0, elemDmg: 0, critRate: 37.5, critDmg: 150, buffAmp: 0, debuffAmp: 0 },
+                    '딸기찹쌀떡맛 쿠키': { baseAtk: 695, atkPercent: 0, elemDmg: 22.5, critRate: 15, critDmg: 210, buffAmp: 0, debuffAmp: 0 },
+                    '소닉워터맛 쿠키': { baseAtk: 673, atkPercent: 0, elemDmg: 22.5, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 0 },
+                    '스팅두리안맛 쿠키': { baseAtk: 681, atkPercent: 0, elemDmg: 22.5, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 0 },
+                    '복숭아맛 쿠키': { baseAtk: 630, atkPercent: 0, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 1, debuffAmp: 0 },
+                    '그린벨맛 쿠키': { baseAtk: 567, atkPercent: 0, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 1, debuffAmp: 0 },
+                    '알사탕맛 쿠키': { baseAtk: 673, atkPercent: 0, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 1 },
+                    '허니베어맛 쿠키': { baseAtk: 1200, atkPercent: 0, elemDmg: 0, critRate: 0, critDmg: 100, buffAmp: 0, debuffAmp: 1 },
+                    '블랙베리맛 쿠키' : { baseAtk: 673, atkPercent: 0, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 1 },
+                    '플랜틴맛 쿠키': { baseAtk: 624, atkPercent: 0, elemDmg: 22.5, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 1 },
+                    '마법사맛 쿠키': { baseAtk: 619, atkPercent: 0, elemDmg: 22.5, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 1 },
+                    '레몬맛 쿠키': { baseAtk: 581, atkPercent: 0, elemDmg: 0, critRate: 15, critDmg: 162.72, buffAmp: 1, debuffAmp: 0 },
+                    '마블베리맛 쿠키': { baseAtk: 630, atkPercent: 0, elemDmg: 22.5, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 0 },
+                    '연금술사맛 쿠키': { baseAtk: 530, atkPercent: 30, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 1 },
+                    '마라맛 쿠키': { baseAtk: 536, atkPercent: 0, elemDmg: 22.5, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 1 },
+                    '체리맛 쿠키': { baseAtk: 542.31, atkPercent: 30, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 0 },
+                    '용감한 쿠키': { baseAtk: 574.62, atkPercent: 30, elemDmg: 140, critRate: 55, critDmg: 150, buffAmp: 0, debuffAmp: 0 },
+                    '버블껌맛 쿠키': { baseAtk: 522, atkPercent: 0, elemDmg: 22.5, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 1 },
+                    '바나나로티맛 쿠키': { baseAtk: 651.54, atkPercent: 30, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 0 },
+                    '록스타맛 쿠키': { baseAtk: 522, atkPercent: 0, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 1, debuffAmp: 0 },
+                    '웨어울프맛 쿠키': { baseAtk: 581.54, atkPercent: 30, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 0 },
+                    '꽈배기맛 쿠키': { baseAtk: 547, atkPercent: 0, elemDmg: 22.5, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 1 },
+                    '닌자맛 쿠키': { baseAtk: 532.31, atkPercent: 30, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 0 },
+                    '버터밀크맛 쿠키': { baseAtk: 656, atkPercent: 0, elemDmg: 0, critRate: 37.5, critDmg: 150, buffAmp: 0, debuffAmp: 0 },
+                    '아이리스맛 쿠키': { baseAtk: 645, atkPercent: 0, elemDmg: 0, critRate: 47.5, critDmg: 150, buffAmp: 0, debuffAmp: 0 },
+                    '이슬맛 쿠키': { baseAtk: 577, atkPercent: 0, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 1, debuffAmp: 0 },
+                    '윈드파라거스 쿠키': { baseAtk: 578, atkPercent: 0, elemDmg: 0, critRate: 47.5, critDmg: 150, buffAmp: 0, debuffAmp: 1 },
+                    '로스베이컨맛 쿠키': { baseAtk: 706.92, atkPercent: 30, elemDmg: 0, critRate: 15, critDmg: 150, buffAmp: 0, debuffAmp: 0}
+                },
+                
+                // 아티팩트 데이터
+                artifacts: {
+                    '노력의 결실': { atkPercent: 35, elemDmg: 30, critRate: 0, critDmg: 0, baseAtkPercent: 0, support: 0 },
+                    '보석 같은 기억': { atkPercent: 35, elemDmg: 60, critRate: 0, critDmg: 0, baseAtkPercent: 0, support: 0 },
+                    '작전 개시': { atkPercent: 35, elemDmg: 0, critRate: 0, critDmg: 140, baseAtkPercent: 0, support: 0 },
+                    '돌이킬 수 없는 선택': { atkPercent: 35, elemDmg: 0, critRate: 0, critDmg: 70, baseAtkPercent: 0, support: 0 },
+                    '석양 아래 추격전': { atkPercent: 35, elemDmg: 41.6, critRate: 0, critDmg: 0 , baseAtkPercent: 0, support: 0},
+                    '열기 속 정조준': { atkPercent: 0, elemDmg: 50, critRate: 25, critDmg: 70, baseAtkPercent: 0, support: 0 },
+                    '꿰뚫는 빛': { atkPercent: 35, elemDmg: 0, critRate: 0, critDmg: 0, baseAtkPercent: 0, support: 0 },
+                    '되새기는 기억': { atkPercent: 35, elemDmg: 51.8, critRate: 0, critDmg: 0, baseAtkPercent: 0, support: 0 },
+                    '특제 요리': { atkPercent: 0, elemDmg: 75, critRate: 40, critDmg: 0, baseAtkPercent: 0, support: 0 },
+                    '행복의 기억': { atkPercent: 0, elemDmg: 0, critRate: 25, critDmg: 0, baseAtkPercent: 0, support: 0 },
+                    '눈밭 위의 질주': { atkPercent: 35, elemDmg: 0, critRate: 45, critDmg: 75, baseAtkPercent: 0, support: 0},
+                    '각성의 순간': { atkPercent: 35, elemDmg: 60, critRate: 0, critDmg: 75, baseAtkPercent: 0, support: 0 },
+                    '충전은 타이밍': { atkPercent: 35, elemDmg: 0, critRate: 0, critDmg: 0, baseAtkPercent: 0, support: 1 },
+                    '다정한 소원': { atkPercent: 0, elemDmg: 40, critRate: 0, critDmg: 0, baseAtkPercent: 0, support: 1 },
+                    '저 너머로!': { atkPercent: 35, elemDmg: 18, critRate: 0, critDmg: 0, baseAtkPercent: 0, support: 1 },
+                    '포크레인': { atkPercent: 0, elemDmg: 0, critRate: 20, critDmg: 24, baseAtkPercent: 0, support: 0 },
+                    '실수투성이인 하루': { atkPercent: 35, elemDmg: 0, critRate: 0, critDmg: 0, baseAtkPercent: 60, support: 0},
+                    '화려한 등장': { atkPercent: 35, elemDmg: 0, critRate: 0, critDmg: 0, baseAtkPercent: 0, support: 0 },
+                    '잊혀진 마법서의 비밀': { atkPercent: 35, elemDmg: 0, critRate: 16, critDmg: 0, baseAtkPercent: 0, support: 0 },
+                    '앵콜 스테이지': { atkPercent: 35, elemDmg: 0, critRate: 0, critDmg: 0, baseAtkPercent: 0, support: 1 },
+                    '새로운 조합식': { atkPercent: 25, elemDmg: 0, critRate: 0, critDmg: 0, baseAtkPercent: 0, support: 1 },
+                    '한 입의 여유': { atkPercent: 0, elemDmg: 0, critRate: 0, critDmg: 0, baseAtkPercent: 0, support: 1 },
+                    '자정의 왈츠': { atkPercent: 35, elemDmg: 0, critRate: 0, critDmg: 0, baseAtkPercent: 0, support: 1 },
+                    '꿀잠의 비결': { atkPercent: 35, elemDmg: 0, critRate: 0, critDmg: 0, baseAtkPercent: 0, support: 1 },
+                    '한가로운 오후': { atkPercent: 35, elemDmg: 0, critRate: 0, critDmg: 30, baseAtkPercent: 0, support: 1 },
+                    '환상의 짝꿍': { atkPercent: 0, elemDmg: 0, critRate: 25, critDmg: 0, baseAtkPercent: 0, support: 0 },
+                    '배반의 기도': { atkPercent: 35, elemDmg: 0, critRate: 0, critDmg: 0, baseAtkPercent: 0, support: 0 },
+                    '비가 전해 줄 소식': { atkPercent: 0, elemDmg: 50, critRate: 0, critDmg: 40, baseAtkPercent: 0, support: 0 },
+                    '비에 젖은 과거': { atkPercent: 0, elemDmg: 30, critRate: 0, critDmg: 60, baseAtkPercent: 0, support: 1 },
+                    '이어지는 마음': { atkPercent: 40, elemDmg: 0, critRate: 0, critDmg: 90, baseAtkPercent: 0, support: 1 },
+                    '든든한 응원': { atkPercent: 35, elemDmg: 0, critRate: 47.5, critDmg: 90, baseAtkPercent: 0, support: 0}
+                },
+                
+                // 세트 데이터
+                sets: {
+                    '속성 세트': { elemAtk: 190, atkPercent: 0, elemDmg: 126.2, critRate: 0, critDmg: 0, defPen: 0, support: 0 },
+                    '설탕 세트': { elemAtk: 116, atkPercent: 0, elemDmg: 81.2, critRate: 0, critDmg: 0, defPen: 0, support: 0 },
+                    '시간관리국의 제복 세트': { elemAtk: 140, atkPercent: 45, elemDmg: 83.7, critRate: 0, critDmg: 0, defPen: 0, support: 0 },
+                    '미지의 방랑자 세트': { elemAtk: 140, atkPercent: 0, elemDmg: 83.7, critRate: 15, critDmg: 37.5, defPen: 0, support: 0 },
+                    '수상한 사냥꾼 세트': { elemAtk: 20, atkPercent: 20, elemDmg: 61.2, critRate: 22.5, critDmg: 37.5, defPen: 0, support: 0 },
+                    '오묘한 기억 세트': { elemAtk: 20, atkPercent: 0, elemDmg: 61.2, critRate: 22.5, critDmg: 37.5, defPen: 6, support: 0 },
+                    '잊혀진 영웅 세트': { elemAtk: 20, atkPercent: 0, elemDmg: 61.2, critRate: 22.5, critDmg: 37.5, defPen: 0, support: 0 },
+                    '황금 예복 세트': { elemAtk: 20, atkPercent: 0, elemDmg: 61.2, critRate: 22.5, critDmg: 0, defPen: 0, support: 1 },
+                    '유성우의 향연 세트': { elemAtk: 20, atkPercent: 0, elemDmg: 61.2, critRate: 0, critDmg: 0, defPen: 0, support: 1 },
+                    '영원의 대마술사 세트': { elemAtk: 20, atkPercent: 0, elemDmg: 61.2, critRate: 0, critDmg: 0, defPen: 0, support: 1 },
+                    '전설의 유령해적 세트': { elemAtk: 20, atkPercent: 0, elemDmg: 61.2, critRate: 0, critDmg: 0, defPen: 0, support: 1 }
+                },
+                
+                // 속성별 쿠키 그룹
+                elementTypes: {
+                    '불': {
+                        cookies: ['딸기찹쌀떡맛 쿠키', '복숭아맛 쿠키', '할라피뇨맛 쿠키', '마라맛 쿠키', '칠리맛 쿠키', '체리맛 쿠키']
+                    },
+                    '물': {
+                        cookies: ['아이리스맛 쿠키', '이슬맛 쿠키', '크림소다맛 쿠키', '아이스민트맛 쿠키', '소닉워터맛 쿠키', '록스타맛 쿠키', '버블껌맛 쿠키']
+                    },
+                    '바람': {
+                        cookies: ['로스베이컨맛 쿠키', '윈드파라거스 쿠키', '그린벨맛 쿠키', '바질페스토맛 쿠키', '호밀맛 쿠키', '플랜틴맛 쿠키', '닌자맛 쿠키']
+                    },
+                    '대지': {
+                        cookies: ['드라이스톤맛 쿠키', '허니베어맛 쿠키', '알사탕맛 쿠키', '스팅두리안맛 쿠키', '꽈배기맛 쿠키', '용감한 쿠키']
+                    },
+                    '빛': {
+                        cookies: ['버터밀크맛 쿠키', '바나나로티맛 쿠키', '슈가글로브맛 쿠키', '레몬제스트맛 쿠키', '레몬맛 쿠키', '마법사맛 쿠키']
+                    },
+                    '어둠': {
+                        cookies: ['선데맛 쿠키', '마블베리맛 쿠키', '블랙베리맛 쿠키', '다크초코 쿠키', '콜라비맛 쿠키', '연금술사맛 쿠키', '웨어울프맛 쿠키']
+                    }
+                },
+                
+                // 추천 조합
+                recommendations: {
+                    '선데맛 쿠키': {
+                        artifacts: ['보석 같은 기억', '특제 요리', '눈밭 위의 질주'],
+                        sets: ['시간관리국의 제복 세트', '잊혀진 영웅 세트', '속성 세트']
+                    },
+                    '크림소다맛 쿠키': {
+                        artifacts: ['작전 개시', '비가 전해 줄 소식'],
+                        sets: ['수상한 사냥꾼 세트', '시간관리국의 제복 세트']
+                    },
+                    '칠리맛 쿠키': {
+                        artifacts: ['작전 개시'],
+                        sets: ['설탕 세트', '수상한 사냥꾼 세트', '시간관리국의 제복 세트']
+                    },
+                    '다크초코 쿠키': {
+                        artifacts: ['작전 개시', '돌이킬 수 없는 선택'],
+                        sets: ['시간관리국의 제복 세트', '오묘한 기억 세트', '속성 세트']
+                    },
+                    '호밀맛 쿠키': {
+                        artifacts: ['석양 아래 추격전', '열기 속 정조준'],
+                        sets: ['미지의 방랑자 세트', '시간관리국의 제복 세트', '수상한 사냥꾼 세트', '오묘한 기억 세트', '잊혀진 영웅 세트', '속성 세트']
+                    },
+                    '레몬제스트맛 쿠키': {
+                        artifacts: ['꿰뚫는 빛', '석양 아래 추격전', '열기 속 정조준'],
+                        sets: ['수상한 사냥꾼 세트', '시간관리국의 제복 세트', '설탕 세트', '속성 세트']
+                    },
+                    '콜라비맛 쿠키': {
+                        artifacts: ['되새기는 기억', '잊혀진 마법서의 비밀', '든든한 응원'],
+                        sets: ['미지의 방랑자 세트', '오묘한 기억 세트']
+                    },
+                    '할라피뇨맛 쿠키': {
+                        artifacts: ['열기 속 정조준'],
+                        sets: ['수상한 사냥꾼 세트', '시간관리국의 제복 세트', '잊혀진 영웅 세트', '오묘한 기억 세트', '속성 세트']
+                    },
+                    '바질페스토맛 쿠키': {
+                        artifacts: ['특제 요리', '눈밭 위의 질주', '보석 같은 기억'],
+                        sets: ['수상한 사냥꾼 세트', '시간관리국의 제복 세트', '잊혀진 영웅 세트']
+                    },
+                    '슈가글로브맛 쿠키': {
+                        artifacts: ['행복의 기억'],
+                        sets: ['오묘한 기억 세트', '시간관리국의 제복 세트']
+                    },
+                    '아이스민트맛 쿠키': {
+                        artifacts: ['눈밭 위의 질주', '보석 같은 기억', '충전은 타이밍', '특제 요리', '포크레인'],
+                        sets: ['미지의 방랑자 세트', '수상한 사냥꾼 세트', '시간관리국의 제복 세트', '오묘한 기억 세트']
+                    },
+                    '드라이스톤맛 쿠키': {
+                        artifacts: ['각성의 순간', '작전 개시'],
+                        sets: ['시간관리국의 제복 세트', '미지의 방랑자 세트', '수상한 사냥꾼 세트']
+                    },
+                    '딸기찹쌀떡맛 쿠키': {
+                        artifacts: ['실수투성이인 하루'],
+                        sets: ['시간관리국의 제복 세트']
+                    },
+                    '소닉워터맛 쿠키': {
+                        artifacts: ['화려한 등장', '저 너머로!'],
+                        sets: ['유성우의 향연 세트', '황금 예복 세트']
+                    },
+                    '스팅두리안맛 쿠키': {
+                        artifacts: ['열기 속 정조준', '포크레인'],
+                        sets: ['속성 세트', '시간관리국의 제복 세트', '오묘한 기억 세트', '잊혀진 영웅 세트']
+                    },
+                    '알사탕맛 쿠키': {
+                        artifacts: ['저 너머로!', '실수투성이인 하루', '행복의 기억', '잊혀진 마법서의 비밀', '되새기는 기억'],
+                        sets: ['황금 예복 세트', '시간관리국의 제복 세트', '잊혀진 영웅 세트', '미지의 방랑자 세트']
+                    },
+                    '플랜틴맛 쿠키': {
+                        artifacts: ['보석 같은 기억', '저 너머로!', '충전은 타이밍', '포크레인'],
+                        sets: ['잊혀진 영웅 세트', '오묘한 기억 세트', '유성우의 향연 세트', '황금 예복 세트', '속성 세트']
+                    },
+                    '마법사맛 쿠키': {
+                        artifacts: ['저 너머로!', '새로운 조합식', '잊혀진 마법서의 비밀'],
+                        sets: ['유성우의 향연 세트', '황금 예복 세트', '오묘한 기억 세트', '속성 세트']
+                    },
+                    '레몬맛 쿠키': {
+                        artifacts: ['한가로운 오후', '다정한 소원', '앵콜 스테이지', '포크레인'],
+                        sets: ['영원의 대마술사 세트', '오묘한 기억 세트']
+                    },
+                    '마블베리맛 쿠키': {
+                        artifacts: ['충전은 타이밍'],
+                        sets: ['황금 예복 세트']
+                    },
+                    '연금술사맛 쿠키': {
+                        artifacts: ['잊혀진 마법서의 비밀'],
+                        sets: ['미지의 방랑자 세트', '오묘한 기억 세트', '속성 세트']
+                    },
+                    '마라맛 쿠키': {
+                        artifacts: ['충전은 타이밍', '새로운 조합식', '보석 같은 기억'],
+                        sets: ['유성우의 향연 세트', '오묘한 기억 세트', '속성 세트']
+                    },
+                    '체리맛 쿠키': {
+                        artifacts: ['꿰뚫는 빛', '열기 속 정조준'],
+                        sets: ['오묘한 기억 세트', '속성 세트']
+                    },
+                    '용감한 쿠키': {
+                        artifacts: ['보석 같은 기억'],
+                        sets: ['속성 세트', '잊혀진 영웅 세트', '시간관리국의 제복 세트']
+                    },
+                    '복숭아맛 쿠키': {
+                        artifacts: ['한 입의 여유', '앵콜 스테이지', '다정한 소원'],
+                        sets: ['영원의 대마술사 세트']
+                    },
+                    '블랙베리맛 쿠키': {
+                        artifacts: ['자정의 왈츠', '저 너머로!'],
+                        sets: ['유성우의 향연 세트']
+                    },
+                    '그린벨맛 쿠키': {
+                        artifacts: ['다정한 소원'],
+                        sets: ['영원의 대마술사 세트']
+                    },
+                    '허니베어맛 쿠키': {
+                        artifacts: ['꿀잠의 비결'],
+                        sets: ['유성우의 향연 세트', '전설의 유령해적 세트']
+                    },
+                    '닌자맛 쿠키': {
+                        artifacts: ['열기 속 정조준', '석양 아래 추격전'],
+                        sets: ['시간관리국의 제복 세트', '미지의 방랑자 세트']
+                    },
+                    '꽈배기맛 쿠키': {
+                        artifacts: ['열기 속 정조준', '저 너머로!'],
+                        sets: ['시간관리국의 제복 세트', '황금 예복 세트', '미지의 방랑자 세트', '속성 세트']
+                    },
+                    '록스타맛 쿠키': {
+                        artifacts: ['한 입의 여유', '다정한 소원', '앵콜 스테이지'],
+                        sets: ['영원의 대마술사 세트', '오묘한 기억 세트', '속성 세트']
+                    },
+                    '웨어울프맛 쿠키': {
+                        artifacts: ['작전 개시', '노력의 결실'],
+                        sets: ['수상한 사냥꾼 세트', '시간관리국의 제복 세트']
+                    },
+                    '바나나로티맛 쿠키': {
+                        artifacts: ['환상의 짝꿍', '충전은 타이밍', '저 너머로!', '보석 같은 기억'],
+                        sets: ['유성우의 향연 세트', '황금 예복 세트', '오묘한 기억 세트', '속성 세트']
+                    },
+                    '버블껌맛 쿠키': {
+                        artifacts: ['저 너머로!'],
+                        sets: ['유성우의 향연 세트', '황금 예복 세트']
+                    },
+                    '버터밀크맛 쿠키': {
+                        artifacts: ['배반의 기도', '보석 같은 기억'],
+                        sets: ['시간관리국의 제복 세트', '오묘한 기억 세트']
+                    },
+                    '아이리스맛 쿠키': {
+                        artifacts: ['비가 전해 줄 소식', '작전 개시'],
+                        sets: ['수상한 사냥꾼 세트', '시간관리국의 제복 세트']
+                    },
+                    '이슬맛 쿠키': {
+                        artifacts: ['비에 젖은 과거', '한가로운 오후'],
+                        sets: ['영원의 대마술사 세트', '유성우의 향연 세트', '오묘한 기억 세트']
+                    },
+                    '윈드파라거스 쿠키': {
+                        artifacts: ['이어지는 마음'],
+                        sets: ['황금 예복 세트', '시간관리국의 제복 세트', '수상한 사냥꾼 세트', '미지의 방랑자 세트']
+                    },
+                    '로스베이컨맛 쿠키': {
+                        artifacts: ['든든한 응원'],
+                        sets: ['수상한 사냥꾼 세트', '시간관리국의 제복 세트']
+                    }
+                },
+                
+                // 적 스탯
+                enemyStats: {
+                    '챔피언스 레이드': { defense: 1500, elemResist: 20, option: 0 },
+                    '무한의 미궁': { defense: 1000, elemResist: 20, option: 1 }
+                },
+                
+                // 추가 치명타 피해 옵션
+                additionalCritDmgOptions: {
+                    '어둠': [
+                        { value: 'direct', label: { ko: '직접 입력', en: 'Direct Input' }, critDmg: 0 },
+                        { value: 'waltz', label: { ko: '자정의 왈츠 (30)', en: 'Midnight Waltz (30)' }, critDmg: 30 }
+                    ],
+                    '빛': [
+                        { value: 'direct', label: { ko: '직접 입력', en: 'Direct Input' }, critDmg: 0 },
+                        { value: 'afternoon', label: { ko: '한가로운 오후 (30)', en: 'Leisurely Afternoon (30)' }, critDmg: 30 },
+                        { value: 'lemon', label: { ko: '레몬맛 쿠키 (93.63)', en: 'Lemon Cookie (93.63)' }, critDmg: 93.63 },
+                        { value: 'peach', label: { ko: '레몬맛 쿠키 + 한 입의 여유 (109.76)', en: 'Lemon Cookie + Breaktime Snack (109.76)' }, critDmg: 109.76 },
+                        { value: 'all', label: { ko: '레몬맛 쿠키 + 한가로운 오후 (123.63)', en: 'Lemon Cookie + Leisurely Afternoon (123.63)' }, critDmg: 123.63 }
+                    ],
+                    '불': [
+                        { value: 'direct', label: { ko: '직접 입력', en: 'Direct Input' }, critDmg: 0 }
+                    ],
+                    '물': [
+                        { value: 'direct', label: { ko: '직접 입력', en: 'Direct Input' }, critDmg: 0 },
+                        { value: 'dew', label: { ko: '이슬맛 쿠키 (112.5)', en: 'Dew Cookie (112.5)' }, critDmg: 112.5 },
+                        { value: 'dewskill', label: { ko: '이슬맛 쿠키 (스강) (126)', en: 'Dew Cookie (Skill upgrade) (126)' }, critDmg: 126 }
+                    ],
+                    '대지': [
+                        { value: 'direct', label: { ko: '직접 입력', en: 'Direct Input' }, critDmg: 0 }
+                    ],
+                    '바람': [
+                        { value: 'direct', label: { ko: '직접 입력', en: 'Direct Input' }, critDmg: 0 }
+                    ]
+                }
+            };
+            
+            // 이미지 경로 매핑
+            const cookieImages = {
+                // 쿠키
+                '선데맛 쿠키': './image/cookie/Sundae.png',
+                '크림소다맛 쿠키': './image/cookie/CreamSoda.png',
+                '칠리맛 쿠키': './image/cookie/ChiliPepper.png',
+                '다크초코 쿠키': './image/cookie/DarkChoco.png',
+                '호밀맛 쿠키': './image/cookie/Rye.png',
+                '레몬제스트맛 쿠키': './image/cookie/Lemonzest.png',
+                '콜라비맛 쿠키': './image/cookie/Kohlarbi.png',
+                '할라피뇨맛 쿠키': './image/cookie/Jalapeno.png',
+                '바질페스토맛 쿠키': './image/cookie/BasilPesto.png',
+                '슈가글로브맛 쿠키': './image/cookie/SugarGlobe.png',
+                '아이스민트맛 쿠키': './image/cookie/IceMint.png',
+                '드라이스톤맛 쿠키': './image/cookie/Frostrock.png',
+                '딸기찹쌀떡맛 쿠키': './image/cookie/Mochi.png',
+                '소닉워터맛 쿠키': './image/cookie/SonicWater.png',
+                '스팅두리안맛 쿠키': './image/cookie/StingDurian.png',
+                '알사탕맛 쿠키': './image/cookie/CandyDrop.png',
+                '플랜틴맛 쿠키': './image/cookie/Plantain.png',
+                '마법사맛 쿠키': './image/cookie/Magician.png',
+                '레몬맛 쿠키': './image/cookie/Lemon.png',
+                '마블베리맛 쿠키': './image/cookie/MarbleBerry.png',
+                '연금술사맛 쿠키': './image/cookie/Alchemist.png',
+                '마라맛 쿠키': './image/cookie/Mala.png',
+                '체리맛 쿠키': './image/cookie/Cherry.png',
+                '용감한 쿠키': './image/cookie/GingerBrave.png',
+                '복숭아맛 쿠키': './image/cookie/Peach.png',
+                '그린벨맛 쿠키': './image/cookie/GreenBell.png',
+                '허니베어맛 쿠키': './image/cookie/HoneyBear.png',
+                '블랙베리맛 쿠키': './image/cookie/BlackBerry.png',
+                '닌자맛 쿠키': './image/cookie/Ninja.png',
+                '웨어울프맛 쿠키': './image/cookie/Wolf.png',
+                '꽈배기맛 쿠키': './image/cookie/Twisted.png',
+                '록스타맛 쿠키': './image/cookie/Rockstar.png',
+                '바나나로티맛 쿠키': './image/cookie/Banana.png',
+                '버블껌맛 쿠키': './image/cookie/Bubble.png',
+                '버터밀크맛 쿠키': './image/cookie/ButterMilk.png',
+                '아이리스맛 쿠키': './image/cookie/Iris.png',
+                '이슬맛 쿠키': './image/cookie/Dew.png',
+                '윈드파라거스 쿠키': './image/cookie/WindAsparagus.png',
+                '로스베이컨맛 쿠키': './image/cookie/RoastedBacon.png',
+
+                // 아티팩트
+                '포크레인': './image/artifact/Fork.png',
+                '작전 개시': './image/artifact/Oppertunity.png',
+                '열기 속 정조준': './image/artifact/AimSpiceDown.png',
+                '각성의 순간': './image/artifact/Awakening.png',
+                '실수투성이인 하루': './image/artifact/Day.png',
+                '저 너머로!': './image/artifact/GoingBeyond.png',
+                '행복의 기억': './image/artifact/HappyMemory.png',
+                '되새기는 기억': './image/artifact/Memories.png',
+                '보석 같은 기억': './image/artifact/Memory.png',
+                '꿰뚫는 빛': './image/artifact/PiercingLight.png',
+                '석양 아래 추격전': './image/artifact/Sunset.png',
+                '앵콜 스테이지': './image/artifact/Stage.png',
+                '눈밭 위의 질주': './image/artifact/Snowy.png',
+                '다정한 소원': './image/artifact/Wish.png',
+                '화려한 등장': './image/artifact/Sonic.png',
+                '돌이킬 수 없는 선택': './image/artifact/NoTurningBack.png',
+                '특제 요리': './image/artifact/Meal.png',
+                '잊혀진 마법서의 비밀': './image/artifact/Forgotten.png',
+                '한가로운 오후': './image/artifact/Lemon.png',
+                '자정의 왈츠': './image/artifact/Waltz.png',
+                '꿀잠의 비결': './image/artifact/Honey.png',
+                '한 입의 여유': './image/artifact/Peach.png',
+                '새로운 조합식': './image/artifact/Alchemist.png',
+                '충전은 타이밍': './image/artifact/Recharge.png',
+                '환상의 짝꿍': './image/artifact/Partner.png',
+                '배반의 기도': './image/artifact/Prayer.png',
+                '비가 전해 줄 소식': './image/artifact/Rain.png',
+                '비에 젖은 과거': './image/artifact/Past.png',
+                '이어지는 마음': './image/artifact/LinkedHearts.png',
+                '든든한 응원': './image/artifact/Encouragement.png',
+                '노력의 결실': './image/artifact/Fruit.png',
+
+                // 세트
+                '설탕 세트': './image/equipment/Sugar.png',
+                '시간관리국의 제복 세트': './image/equipment/TBD.png',
+                '잊혀진 영웅 세트': './image/equipment/Hero.png',
+                '오묘한 기억 세트': './image/equipment/Memory.png',
+                '황금 예복 세트': './image/equipment/Finery.png',
+                '수상한 사냥꾼 세트': './image/equipment/Hunter.png',
+                '미지의 방랑자 세트': './image/equipment/Wanderer.png',
+                '유성우의 향연 세트': './image/equipment/Star.png',
+                '전설의 유령해적 세트': './image/equipment/Ghost.png',
+                '영원의 대마술사 세트': './image/equipment/Magician.png',
+
+                // 속성
+                '불': './image/element-type/fire.png',
+                '물': './image/element-type/water.png',
+                '바람': './image/element-type/wind.png',
+                '대지': './image/element-type/land.png',
+                '빛': './image/element-type/light.png',
+                '어둠': './image/element-type/dark.png'
+            };
+            
+            // ==================== React 컴포넌트 ====================
+            
+            
+            // 커스텀 드롭다운 컴포넌트
+            const CustomDropdown = ({ value, onChange, options, label, displayNames }) => {
+                const [isOpen, setIsOpen] = useState(false);
+                const dropdownRef = useRef(null);
+                
+                useEffect(() => {
+                    const handleClickOutside = (event) => {
+                        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                            setIsOpen(false);
+                        }
+                    };
+                    
+                    document.addEventListener('mousedown', handleClickOutside);
+                    return () => document.removeEventListener('mousedown', handleClickOutside);
+                }, []);
+                
+                const handleSelect = (option) => {
+                    onChange(option);
+                    setIsOpen(false);
+                };
+                
+                const getDisplayName = (option) => {
+                    return displayNames ? (displayNames[option] || option) : option;
+                };
+                
+                return (
+                    <div className="dropdown-wrapper" ref={dropdownRef}>
+                        <label className="label">{label}</label>
+                        <div className="custom-dropdown">
+                            <div 
+                                className={`dropdown-selected ${isOpen ? 'open' : ''}`}
+                                onClick={() => setIsOpen(!isOpen)}
+                            >
+                                {cookieImages[value] && (
+                                    <img src={cookieImages[value]} alt={value} />
+                                )}
+                                <span>{getDisplayName(value)}</span>
+                                <i className="icon-chevron-down dropdown-arrow"></i>
+                            </div>
+                            <div className={`dropdown-options ${isOpen ? 'open' : ''}`}>
+                                {options.map(option => (
+                                    <div
+                                        key={option}
+                                        className={`dropdown-option ${option === value ? 'selected' : ''}`}
+                                        onClick={() => handleSelect(option)}
+                                    >
+                                        {cookieImages[option] && (
+                                            <img src={cookieImages[option]} alt={option} />
+                                        )}
+                                        <span>{getDisplayName(option)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            // 메인 애플리케이션 컴포넌트
+            const CookieOptimizer = () => {
+                // ========== 상태 관리 ==========
+                
+                // 언어 상태
+                const [language, setLanguage] = useState(() => {
+                    const savedLang = localStorage.getItem('selectedLanguage');
+                    return savedLang || 'ko';
+                });
+                
+                // 다크모드 상태
+                const [isDarkMode, setIsDarkMode] = useState(() => {
+                    const savedDarkMode = localStorage.getItem('darkMode');
+                    return savedDarkMode === 'true';
+                });
+                
+                // 게임 설정 상태
+                const [selectedElementType, setSelectedElementType] = useState('바람');
+                const [selectedCookie, setSelectedCookie] = useState('로스베이컨맛 쿠키');
+                const [selectedArtifact, setSelectedArtifact] = useState('든든한 응원');
+                const [selectedSet, setSelectedSet] = useState('수상한 사냥꾼 세트');
+                const [contentType, setContentType] = useState('챔피언스 레이드');
+                const [minCritRate, setMinCritRate] = useState(85);
+                const [additionalElementDmg, setAdditionalElementDmg] = useState(0);
+                const [additionalCritDmgType, setAdditionalCritDmgType] = useState('direct');
+                const [additionalCritDmgValue, setAdditionalCritDmgValue] = useState(0);
+                const [results, setResults] = useState([]);
+                
+                // 현재 언어의 번역 가져오기
+                const t = translations[language];
+                
+                // ========== 유틸리티 함수 ==========
+                
+                // 영어 서수 접미사
+                const getOrdinalSuffix = (i) => {
+                    const j = i % 10;
+                    const k = i % 100;
+                    if (j === 1 && k !== 11) return "st";
+                    if (j === 2 && k !== 12) return "nd";
+                    if (j === 3 && k !== 13) return "rd";
+                    return "th";
+                };
+                
+                // 언어 변경 핸들러
+                const changeLanguage = useCallback((lang) => {
+                    setLanguage(lang);
+                    localStorage.setItem('selectedLanguage', lang);
+                }, []);
+                
+                // 다크모드 토글
+                const toggleDarkMode = useCallback(() => {
+                    const newDarkMode = !isDarkMode;
+                    setIsDarkMode(newDarkMode);
+                    document.body.classList.toggle('dark-mode');
+                    localStorage.setItem('darkMode', newDarkMode.toString());
+                }, [isDarkMode]);
+                
+                // ========== 계산 로직 ==========
+                
+                // 기본 데미지 계산 함수
+                const calculateDamage = (upgrades, basic, defend, critOption) => {
+                    const [a, b, c, d, e, f, g] = upgrades;
+                    const weaponAtk = 52;
+                    const increaseA = 80;
+                    const increaseB = 0.2;
+                    const increaseC = 15;
+                    const increaseD = 25;
+                    const increaseE = 15;
+                    
+                    const finalA = parseInt((basic.baseAtk + basic.elemAtk + increaseA * a) * 
+                                (1 + increaseB * b + (weaponAtk + basic.atkPercent) / 100));
+                    const finalE = basic.elemDmg + increaseE * e;
+                    const finalC = Math.min(basic.critRate + increaseC * c, 100);
+                    const finalD = basic.critDmg + increaseD * d;
+                    const finalDefPen = basic.defPen;
+                    
+                    const crit = parseInt(finalA * (finalD / 100));
+                    const common = finalA * (1 - finalC / 100 + (finalD / 100) * (finalC / 100));
+                    
+                    if (critOption === 0) {
+                        return (common * (500 / (500 + defend * (1 - finalDefPen / 100)))) * (1 + finalE / 100);
+                    } else {
+                        return parseInt(parseInt(crit * (500 / (500 + defend * (1 - finalDefPen / 100)))) * (1 + finalE / 100));
+                    }
+                };
+                
+                // 윈드파라거스 쿠키 전용 계산
+                const calculateDamageForWindAsparagus = (upgrades, basic, defend, critOption, selectedSet) => {
+                    const [a, b, c, d, e, f, g] = upgrades;
+                    const weaponAtk = 52;
+                    const increaseA = 80;
+                    const increaseB = 0.2;
+                    const increaseC = 15;
+                    const increaseD = 25;
+                    const increaseE = 15;
+                    const increaseG = 10;
+                    
+                    const finalA = parseInt((basic.baseAtk + basic.elemAtk + increaseA * a) * 
+                                (1 + increaseB * b + (weaponAtk + basic.atkPercent) / 100));
+                    const finalE = basic.elemDmg + increaseE * e;
+                    const finalC = Math.min(basic.critRate + increaseC * c, 100);
+                    const finalD = basic.critDmg + increaseD * d;
+                    const finalDefPen = basic.defPen;
+                    
+                    let finalG = 25 + increaseG * g;
+                    if (selectedSet === "황금 예복 세트") {
+                        finalG = finalG + 15;
+                    }
+                    
+                    const crit = parseInt(finalA * (finalD / 100));
+                    const common = finalA * (1 - finalC / 100 + (finalD / 100) * (finalC / 100));
+                    
+                    if (critOption === 0) {
+                        return (common * (500 / (500 + defend * (1 - finalDefPen / 100))) * 
+                            (1 + finalE / 100) * (1 + finalG * 1.25 / 100) * (1.05 + finalG * 0.25 / 100));
+                    } else {
+                        return (crit * (500 / (500 + defend * (1 - finalDefPen / 100))) * 
+                            (1 + finalE / 100) * (1 + finalG * 1.25 / 100) * (1.05 + finalG * 0.25 / 100));
+                    }
+                };
+                
+                // 드라이스톤맛 쿠키 전용 계산
+                const calculateDamageForFrostrock = (upgrades, basic, defend, critOption) => {
+                    const [a, b, c, d, e, f, g] = upgrades;
+                    const weaponAtk = 52;
+                    const increaseA = 80;
+                    const increaseB = 0.2;
+                    const increaseC = 15;
+                    const increaseD = 25;
+                    const increaseE = 15;
+                    
+                    const finalA = parseInt((basic.baseAtk + basic.elemAtk + increaseA * a) * 
+                                (1 + increaseB * b + (weaponAtk + basic.atkPercent) / 100));
+                    const finalE = basic.elemDmg + increaseE * e;
+                    const finalC = Math.min(basic.critRate + increaseC * c, 100);
+                    const finalD = basic.critDmg + increaseD * d;
+                    const finalDefPen = basic.defPen;
+                    
+                    const crit = parseInt(finalA * (finalD / 100) * (500 / (500 + defend * (1 - finalDefPen / 100))) * (1 + finalE / 100));
+                    const nocrit = parseInt(finalA * (500 / (500 + defend * (1 - finalDefPen / 100))) * (1 + finalE / 100));
+                    const common = finalA * (1 - finalC / 100 + (finalD / 100) * (finalC / 100)) * 
+                                (500 / (500 + defend * (1 - finalDefPen / 100))) * (1 + finalE / 100);
+                    
+                    if (critOption === 0) {
+                        return (common * 65.2 + nocrit * 22.8) * 1.45 + (common * 78.4 + nocrit * 12);
+                    } else {
+                        return (crit * 65.2 + nocrit * 22.8) * 1.45 + (crit * 78.4 + nocrit * 12);
+                    }
+                };
+                
+                // ========== 이펙트 훅 ==========
+                
+                // 다크모드 초기화
+                useEffect(() => {
+                    if (isDarkMode) {
+                        document.body.classList.add('dark-mode');
+                    }
+                }, []);
+                
+                // 언어 변경 시 메타 태그 업데이트
+                useEffect(() => {
+                    document.documentElement.lang = language;
+                    document.title = language === 'ko' 
+                        ? '쿠키런: 모험의 탑 최적 잠재 계산기' 
+                        : 'CookieRun: Tower of Adventures Optimal Potential Calculator';
+
+                    const metaTitle = document.querySelector('meta[name="title"]');
+                    const metaDescription = document.querySelector('meta[name="description"]');
+                    const ogTitle = document.querySelector('meta[property="og:title"]');
+                    const ogDescription = document.querySelector('meta[property="og:description"]');
+                    
+                    if (metaTitle) {
+                        metaTitle.setAttribute('content', language === 'ko' 
+                            ? '쿠키런: 모험의 탑 최적 잠재 계산기'
+                            : 'CookieRun: Tower of Adventures Optimal Potential Calculator');
+                    }
+                    if (metaDescription) {
+                        metaDescription.setAttribute('content', language === 'ko'
+                            ? '쿠키런: 모험의 탑 쿠키들의 다양한 조합의 최적 잠재를 확인해보세요.'
+                            : 'Check the optimal potential of various cookie combinations in CookieRun: Tower of Adventures.');
+                    }
+                    if (ogTitle) {
+                        ogTitle.setAttribute('content', language === 'ko'
+                            ? '쿠키런: 모험의 탑 최적 잠재 계산기'
+                            : 'CookieRun: Tower of Adventures Optimal Potential Calculator');
+                    }
+                    if (ogDescription) {
+                        ogDescription.setAttribute('content', language === 'ko'
+                            ? '쿠키런: 모험의 탑 쿠키들의 다양한 조합의 최적 잠재를 확인해보세요.'
+                            : 'Check the optimal potential of various cookie combinations in CookieRun: Tower of Adventures.');
+                    }
+                }, [language]);
+                
+                // 속성 변경 시 첫 번째 쿠키 자동 선택
+                useEffect(() => {
+                    const elementCookies = gameData.elementTypes[selectedElementType];
+                    if (elementCookies && elementCookies.cookies && elementCookies.cookies.length > 0) {
+                        setSelectedCookie(elementCookies.cookies[0]);
+                    }
+
+                }, [selectedElementType]);
+                
+                // 쿠키 변경 시 추천 아티팩트와 세트 자동 선택
+                useEffect(() => {
+                    const recommendation = gameData.recommendations[selectedCookie];
+                    if (recommendation) {
+                        if (recommendation.artifacts && recommendation.artifacts.length > 0) {
+                            setSelectedArtifact(recommendation.artifacts[0]);
+                        }
+                        if (recommendation.sets && recommendation.sets.length > 0) {
+                            setSelectedSet(recommendation.sets[0]);
+                        }
+                    }
+                }, [selectedCookie]);
+                
+                // 최소 치명타 확률 업데이트
+                useEffect(() => {
+                    const cookie = gameData.cookies[selectedCookie];
+                    const artifact = gameData.artifacts[selectedArtifact];
+                    const set = gameData.sets[selectedSet];
+                    
+                    if (selectedCookie === "이슬맛 쿠키") {
+                        let artiBuffAmp = 0;
+                        let setBuffAmp = 0;
+                        
+                        if (selectedArtifact === "비에 젖은 과거") {
+                            artiBuffAmp = 16;
+                        }
+                        if (selectedSet === "영원의 대마술사 세트") {
+                            setBuffAmp = 70;
+                        } else if (selectedSet === "유성우의 향연 세트") {
+                            setBuffAmp = 40;
+                        }
+                        
+                        if (cookie && artifact && set) {
+                            const basicCritRate = Math.min(
+                                cookie.critRate + artifact.critRate + set.critRate + 
+                                Math.min((artiBuffAmp + setBuffAmp + 39) * 0.5, 60), 
+                                100
+                            );
+                            setMinCritRate(basicCritRate);
+                        }
+                    } else {
+                        if (cookie && artifact && set) {
+                            const basicCritRate = Math.min(
+                                cookie.critRate + artifact.critRate + set.critRate,
+                                100
+                            );
+                            setMinCritRate(basicCritRate);
+                        }
+                    }
+                }, [selectedCookie, selectedArtifact, selectedSet]);
+                
+                // 속성 변경 시 추가 치명타 피해 리셋
+                useEffect(() => {
+                    setAdditionalCritDmgType('direct');
+                    setAdditionalCritDmgValue(0);
+                    setAdditionalElementDmg(0);
+                }, [selectedElementType]);
+                
+                // 추가 치명타 피해 값 계산
+                const getAdditionalCritDmg = useMemo(() => {
+                    if (additionalCritDmgType === 'direct') {
+                        return additionalCritDmgValue;
+                    }
+                    const options = gameData.additionalCritDmgOptions[selectedElementType] || [];
+                    const selectedOption = options.find(opt => opt.value === additionalCritDmgType);
+                    return selectedOption ? selectedOption.critDmg : 0;
+                }, [additionalCritDmgType, additionalCritDmgValue, selectedElementType]);
+                
+                // 최적 조합 계산
+                const topCombinations = useMemo(() => {
+                    const cookie = gameData.cookies[selectedCookie];
+                    const artifact = gameData.artifacts[selectedArtifact];
+                    const set = gameData.sets[selectedSet];
+                    const enemy = gameData.enemyStats[contentType];
+                    
+                    if (!cookie || !artifact || !set) return [];
+                    
+                    let basic = {
+                        baseAtk: cookie.baseAtk + cookie.baseAtk * artifact.baseAtkPercent / 100,
+                        elemAtk: set.elemAtk,
+                        atkPercent: cookie.atkPercent + artifact.atkPercent + set.atkPercent,
+                        elemDmg: cookie.elemDmg + artifact.elemDmg + set.elemDmg + additionalElementDmg,
+                        critRate: Math.min(cookie.critRate + artifact.critRate + set.critRate, 100),
+                        critDmg: cookie.critDmg + artifact.critDmg + set.critDmg + getAdditionalCritDmg,
+                        defPen: set.defPen,
+                        buff: cookie.buffAmp + artifact.support + set.support,
+                        debuffAmp: cookie.debuffAmp + artifact.support + set.support
+                    };
+                    
+                    // 이슬맛 쿠키 특수 케이스
+                    if (cookie.baseAtk === 577) {
+                        let artiBuffAmp = 0;
+                        let setBuffAmp = 0;
+                        
+                        if (selectedArtifact === "비에 젖은 과거") {
+                            artiBuffAmp = 16;
+                        }
+                        if (selectedSet === "영원의 대마술사 세트") {
+                            setBuffAmp = 70;
+                        } else if (selectedSet === "유성우의 향연 세트") {
+                            setBuffAmp = 40;
+                        }
+                        
+                        basic.critRate = Math.min(
+                            cookie.critRate + artifact.critRate + set.critRate + 
+                            Math.min((artiBuffAmp + setBuffAmp + 39) * 0.5, 60), 
+                            100
+                        );
+                    }
+                    
+                    const combinations = [];
+                    const maxUpgrades = [2, 8, 8, 8, 2, 4, 4];
+                    
+                    // 최소치확 계산
+                    const requiredC = Math.ceil(Math.max(minCritRate - basic.critRate, 0) / 15);
+
+                    // 쿠키별 계산 로직
+                    if (basic.baseAtk === 713) {
+                        // 드라이스톤맛 쿠키
+                        for (let a = 0; a <= maxUpgrades[0]; a++) {
+                            for (let b = 0; b <= maxUpgrades[1]; b++) {
+                                for (let c = 0; c <= maxUpgrades[2]; c++) {
+                                    for (let d = 0; d <= maxUpgrades[3]; d++) {
+                                        for (let e = 0; e <= maxUpgrades[4]; e++) {
+                                            if (a + b + c + d + e === 8 && 
+                                                c >= Math.min(requiredC, 8)) {
+                                                const damage = calculateDamageForFrostrock(
+                                                    [a, b, c, d, e, 0, 0], 
+                                                    basic, 
+                                                    enemy.defense, 
+                                                    enemy.option
+                                                );
+                                                combinations.push({
+                                                    upgrades: [a, b, c, d, e, 0, 0],
+                                                    damage: damage
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else if (basic.baseAtk === 578) {
+                        // 윈드파라거스 쿠키
+                        if (basic.debuffAmp > 2) {
+                            for (let a = 0; a <= maxUpgrades[0]; a++) {
+                                for (let b = 0; b <= maxUpgrades[1]; b++) {
+                                    for (let c = 0; c <= maxUpgrades[2]; c++) {
+                                        for (let d = 0; d <= maxUpgrades[3]; d++) {
+                                            for (let e = 0; e <= maxUpgrades[4]; e++) {
+                                                if (a + b + c + d + e === 4 && 
+                                                    c >= Math.min(requiredC, 4)) {
+                                                    const damage = calculateDamageForWindAsparagus(
+                                                        [a, b, c, d, e, 0, 4], 
+                                                        basic, 
+                                                        enemy.defense, 
+                                                        enemy.option, 
+                                                        selectedSet
+                                                    );
+                                                    combinations.push({
+                                                        upgrades: [a, b, c, d, e, 0, 4],
+                                                        damage: damage
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            for (let a = 0; a <= maxUpgrades[0]; a++) {
+                                for (let b = 0; b <= maxUpgrades[1]; b++) {
+                                    for (let c = 0; c <= maxUpgrades[2]; c++) {
+                                        for (let d = 0; d <= maxUpgrades[3]; d++) {
+                                            for (let e = 0; e <= maxUpgrades[4]; e++) {
+                                                for (let f = 0; f <= maxUpgrades[5]; f++) {
+                                                    for (let g = 0; g <= maxUpgrades[6]; g++) {
+                                                        if (a + b + c + d + e + f + g === 8 && 
+                                                            c >= Math.min(requiredC, 8)) {
+                                                            const damage = calculateDamageForWindAsparagus(
+                                                                [a, b, c, d, e, f, g], 
+                                                                basic, 
+                                                                enemy.defense, 
+                                                                enemy.option, 
+                                                                selectedSet
+                                                            );
+                                                            combinations.push({
+                                                                upgrades: [a, b, c, d, e, f, g],
+                                                                damage: damage
+                                                            });
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // 일반 쿠키
+                        if (basic.debuffAmp > 2) {
+                            for (let a = 0; a <= maxUpgrades[0]; a++) {
+                                for (let b = 0; b <= maxUpgrades[1]; b++) {
+                                    for (let c = 0; c <= maxUpgrades[2]; c++) {
+                                        for (let d = 0; d <= maxUpgrades[3]; d++) {
+                                            for (let e = 0; e <= maxUpgrades[4]; e++) {
+                                                if (a + b + c + d + e === 4 && 
+                                                    c >= Math.min(requiredC, 4)) {
+                                                    const damage = calculateDamage(
+                                                        [a, b, c, d, e, 0, 4], 
+                                                        basic, 
+                                                        enemy.defense, 
+                                                        enemy.option
+                                                    );
+                                                    combinations.push({
+                                                        upgrades: [a, b, c, d, e, 0, 4],
+                                                        damage: damage
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (basic.buff > 2) {
+                            for (let a = 0; a <= maxUpgrades[0]; a++) {
+                                for (let b = 0; b <= maxUpgrades[1]; b++) {
+                                    for (let c = 0; c <= maxUpgrades[2]; c++) {
+                                        for (let d = 0; d <= maxUpgrades[3]; d++) {
+                                            for (let e = 0; e <= maxUpgrades[4]; e++) {
+                                                if (a + b + c + d + e === 4 && 
+                                                    c >= Math.min(requiredC, 4)) {
+                                                    const damage = calculateDamage(
+                                                        [a, b, c, d, e, 4, 0], 
+                                                        basic, 
+                                                        enemy.defense, 
+                                                        enemy.option
+                                                    );
+                                                    combinations.push({
+                                                        upgrades: [a, b, c, d, e, 4, 0],
+                                                        damage: damage
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            for (let a = 0; a <= maxUpgrades[0]; a++) {
+                                for (let b = 0; b <= maxUpgrades[1]; b++) {
+                                    for (let c = 0; c <= maxUpgrades[2]; c++) {
+                                        for (let d = 0; d <= maxUpgrades[3]; d++) {
+                                            for (let e = 0; e <= maxUpgrades[4]; e++) {
+                                                if (a + b + c + d + e === 8 && 
+                                                    c >= Math.min(requiredC, 8)) {
+                                                    const damage = calculateDamage(
+                                                        [a, b, c, d, e, 0, 0], 
+                                                        basic, 
+                                                        enemy.defense, 
+                                                        enemy.option
+                                                    );
+                                                    combinations.push({
+                                                        upgrades: [a, b, c, d, e, 0, 0],
+                                                        damage: damage
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 정렬 및 상위 6개 반환
+                    combinations.sort((a, b) => b.damage - a.damage);
+                    const top6 = combinations.slice(0, 6);
+                    
+                    if (top6.length > 0) {
+                        const maxDamage = top6[0].damage;
+                        return top6.map((combo, index) => ({
+                            rank: index + 1,
+                            upgrades: combo.upgrades,
+                            damage: combo.damage,
+                            percentage: (combo.damage / maxDamage * 100).toFixed(2)
+                        }));
+                    }
+                    return [];
+                }, [selectedCookie, selectedArtifact, selectedSet, contentType, minCritRate, getAdditionalCritDmg, additionalElementDmg]);
+                
+                // 결과 업데이트
+                useEffect(() => {
+                    setResults(topCombinations);
+                }, [topCombinations]);
+                
+                // ========== 렌더링 ==========
+                
+                return (
+                    <div className="app-container">
+                        <div className="main-wrapper">
+                            {/* 헤더 섹션 */}
+                            <div className="card">
+                                <div className="header-wrapper">
+                                    <div className="header">
+                                        <div className="header-content">
+                                            <img src={t.titleImage} height="90" alt={t.titleImageAlt} />
+                                            <h1 className="title">{t.title}</h1>
+                                        </div>
+                                    </div>
+                                    <div className="header-button">
+                                        <div className="language-selector">
+                                            <button 
+                                                className={`lang-btn ${language === 'ko' ? 'active' : ''}`}
+                                                onClick={() => changeLanguage('ko')}
+                                            >
+                                                한국어
+                                            </button>
+                                            <button 
+                                                className={`lang-btn ${language === 'en' ? 'active' : ''}`}
+                                                onClick={() => changeLanguage('en')}
+                                            >
+                                                English
+                                            </button>
+                                        </div>
+                                        <button 
+                                            className="dark-mode-toggle"
+                                            onClick={toggleDarkMode}
+                                            aria-label="다크모드 전환"
+                                        >
+                                            {isDarkMode ? (
+                                                <i className="icon-sun"></i>
+                                            ) : (
+                                                <i className="icon-moon"></i>
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="info-box">
+                                    <i className="icon-info"></i>
+                                    <p className="info-text">{t.description}</p>
+                                </div>
+                            </div>
+                            
+                            <div className="grid-container">
+                                {/* 설정 섹션 */}
+                                <div className="card">
+                                    <h2 className="section-title">{t.settings}</h2>
+                                    
+                                    {/* 콘텐츠 타입 선택 */}
+                                    <div className="content-type-buttons">
+                                        {[t.championsRaid, t.infiniteLabyrinth].map((type, index) => (
+                                            <button
+                                                key={type}
+                                                onClick={() => setContentType(index === 0 ? '챔피언스 레이드' : '무한의 미궁')}
+                                                className={`content-btn ${contentType === (index === 0 ? '챔피언스 레이드' : '무한의 미궁') ? 'active' : ''}`}
+                                            >
+                                                {type}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    
+                                    {/* 속성 & 쿠키 선택 */}
+                                    <div className="input-grid">
+                                        <CustomDropdown
+                                            value={selectedElementType}
+                                            onChange={setSelectedElementType}
+                                            options={Object.keys(gameData.elementTypes)}
+                                            label={t.element}
+                                            displayNames={t.elements}
+                                        />
+                                        <CustomDropdown
+                                            value={selectedCookie}
+                                            onChange={setSelectedCookie}
+                                            options={gameData.elementTypes[selectedElementType]?.cookies || []}
+                                            label={t.cookie}
+                                            displayNames={t.cookies}
+                                        />
+                                    </div>
+                                    
+                                    {/* 아티팩트 & 세트 선택 */}
+                                    <div className="input-grid">
+                                        <CustomDropdown
+                                            value={selectedArtifact}
+                                            onChange={setSelectedArtifact}
+                                            options={gameData.recommendations[selectedCookie]?.artifacts || []}
+                                            label={t.artifact}
+                                            displayNames={t.artifacts}
+                                        />
+                                        <CustomDropdown
+                                            value={selectedSet}
+                                            onChange={setSelectedSet}
+                                            options={gameData.recommendations[selectedCookie]?.sets || []}
+                                            label={t.set}
+                                            displayNames={t.sets}
+                                        />
+                                    </div>
+                                    
+                                    {/* 추가 스탯 입력 */}
+                                    <div className="input-grid">
+                                        <div>
+                                            <label className="label">{t.minCritRate}</label>
+                                            <input
+                                                type="number"
+                                                min={minCritRate}
+                                                max="100"
+                                                step="0.01"
+                                                value={minCritRate}
+                                                onChange={(e) => setMinCritRate(Number(e.target.value))}
+                                                className="input-field"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="label">{t.additionalElementDmg}</label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={additionalElementDmg}
+                                                onChange={(e) => setAdditionalElementDmg(Number(e.target.value))}
+                                                className="input-field"
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    {/* 추가 치명타 피해 */}
+                                    <div className="crit-dmg-wrapper">
+                                        <label className="label">{t.additionalCritDmg}</label>
+                                        <div className="crit-dmg-input-group">
+                                            <select
+                                                value={additionalCritDmgType}
+                                                onChange={(e) => {
+                                                    setAdditionalCritDmgType(e.target.value);
+                                                    if (e.target.value !== 'direct') {
+                                                        setAdditionalCritDmgValue(0);
+                                                    }
+                                                }}
+                                                className="crit-dmg-select"
+                                            >
+                                                {(gameData.additionalCritDmgOptions[selectedElementType] || []).map(option => (
+                                                    <option key={option.value} value={option.value}>
+                                                        {option.label[language]}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {additionalCritDmgType === 'direct' && (
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    max="300"
+                                                    step="0.01"
+                                                    value={additionalCritDmgValue}
+                                                    onChange={(e) => setAdditionalCritDmgValue(Number(e.target.value))}
+                                                    className="crit-dmg-input"
+                                                    placeholder="0"
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* 결과 섹션 */}
+                                <div className="card">
+                                    <h2 className="section-title">{t.results}</h2>
+                                    {results.length > 0 ? (
+                                        <>
+                                            <div className="results-header-row">
+                                                <span className="header-rank">{t.rank}</span>
+                                                <span className="header-item">{t.elementAtk}</span>
+                                                <span className="header-item">{t.atkPer}</span>
+                                                <span className="header-item">{t.critRate}</span>
+                                                <span className="header-item">{t.critDmg}</span>
+                                                <span className="header-item">{t.elementDmg}</span>
+                                                <span className="header-item">{t.buffAmp}</span>
+                                                <span className="header-item">{t.debuffAmp}</span>
+                                                <span className="header-efficiency">{t.efficiency}</span>
+                                            </div>
+                                            <div className="results-list">
+                                                {results.map((result) => (
+                                                    <div key={result.rank} className={`result-line ${result.rank === 1 ? 'first-place' : ''}`}>
+                                                        <span className="rank">
+                                                            {language === 'en'
+                                                                ? `${result.rank}${getOrdinalSuffix(result.rank)}`
+                                                                : `${result.rank}${t.place}`
+                                                            }
+                                                        </span>
+                                                        {result.upgrades.map((upgrade, idx) => (
+                                                            <span key={idx} className="upgrade-value">{upgrade}</span>
+                                                        ))}
+                                                        <span className="percentage">{result.percentage}%</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="loading-state">
+                                            {t.calculating}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            
+                            {/* 팁 섹션 */}
+                            <div className="card">
+                                <h2 className="section-title">{t.tips}</h2>
+                                <div className="section-list">
+                                    <p>
+                                        {t.tipText.map((tip, index) => (
+                                            <div key={index}>{tip}</div>
+                                        ))}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            {/* 업데이트 내역 섹션 */}
+                            <div className="card update-section">
+                                <h3 className="update-title">{t.updateHistory}</h3>
+                                <div className="update-list">
+                                    {t.updates.map((update, index) => (
+                                        <div key={index} className="update-item">{update}</div>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            {/* 저작권 섹션 */}
+                            <div className="card copyright">
+                                <div>
+                                    {t.copyright.map((text, index) => (
+                                        <p key={index} className="copyright-item">{text}</p>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+            
+            // React 앱 렌더링
+            ReactDOM.render(<CookieOptimizer/>, document.getElementById('root'));
+        </script>
+    </body>
+</html>

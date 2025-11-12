@@ -1,0 +1,26 @@
+{
+  "name": "toapotential",
+  "version": "1.0.0",
+  "description": "ToAPotential - Your project deployed on Vercel",
+  "main": "index.js",
+  "scripts": {
+    "dev": "echo 'Add your development script here'",
+    "build": "echo 'Add your build script here'",
+    "start": "echo 'Add your start script here'",
+    "test": "echo 'No tests specified'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YOUR_USERNAME/toapotential.git"
+  },
+  "keywords": [
+    "vercel",
+    "nextjs"
+  ],
+  "author": "peanutbatt",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/toapotential/issues"
+  },
+  "homepage": "https://toapotential.com"
+}

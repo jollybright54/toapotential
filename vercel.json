@@ -1,0 +1,18 @@
+{
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "master": false
+    }
+  },
+  "github": {
+    "enabled": true,
+    "autoAlias": true
+  },
+  "buildCommand": "",
+  "outputDirectory": "",
+  "installCommand": "",
+  "devCommand": "",
+  "ignoreCommand": "",
+  "framework": null
+}
