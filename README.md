@@ -1,2 +1,1 @@
-*toapotential.com
-toapotential.com
+https://toapotential.com
